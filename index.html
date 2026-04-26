@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title></title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=Geist+Mono:wght@200;300;400&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="styles.css"/>
+</head>
+<body>
+<div id="cur-dot"></div>
+<div id="cur-ring"></div>
+<canvas id="tc"></canvas>
+
+<!-- CARD -->
+<div class="backdrop">
+  <div class="card-glass">
+    <div class="mark">
+      <div class="monogram" id="card-monogram"></div>
+      <div class="mark-meta" id="card-role"><span id="card-domain"></span></div>
+    </div>
+    <div class="name-wrap">
+      <span class="name-first" id="card-first-name"></span>
+      <span class="name-last" id="card-last-name"></span>
+    </div>
+    <div class="rule"></div>
+    <p class="tagline" id="card-tagline"></p>
+    <div class="status"><span class="sdot"></span><span id="card-status"></span></div>
+    <nav class="links">
+      <a id="card-link-email" href="#" target="_blank" rel="noopener"></a>
+      <span class="sep" id="card-sep-1"></span>
+      <a id="card-link-github" href="#" target="_blank" rel="noopener"></a>
+      <span class="sep" id="card-sep-2"></span>
+      <a id="card-link-linkedin" href="#" target="_blank" rel="noopener"></a>
+    </nav>
+  </div>
+</div>
+
+<!-- Game over -->
+<div id="gameover">
+  <p id="gameover-title"></p>
+  <button id="restart-btn"></button>
+</div>
+
+<!-- Hint -->
+<div class="hint" id="game-hint"></div>
+
+<!-- Touch controls -->
+<div class="touch-btns">
+  <div class="tbtn" id="tb-left"></div>
+  <div class="tbtn" id="tb-rotate"></div>
+  <div class="tbtn" id="tb-right"></div>
+  <div class="tbtn" id="tb-down"></div>
+  <div class="tbtn" id="tb-drop"></div>
+</div>
+
+<!-- NEWS TICKER -->
+<div id="ticker-bar">
+  <div class="ticker-label">
+    <span class="ticker-live"></span>
+    <span class="ticker-cat" id="ticker-cat"></span>
+  </div>
+  <div class="ticker-track">
+    <div class="ticker-inner" id="ticker-inner">
+      <span class="ticker-loading" id="ticker-loading"></span>
+    </div>
+  </div>
+  <div class="ticker-time" id="ticker-time"></div>
+</div>
+
+<div class="stamp" id="card-stamp"></div>
+
+<script src="strings.js"></script>
+<script src="board-layout.js"></script>
+<script>
+const STRINGS=window.AppStrings;
+
+function applyStaticStrings(){
+  if(!STRINGS) return;
+  const card=STRINGS.card||{};
+  const gameOver=STRINGS.gameOver||{};
+  const hint=STRINGS.hint||{};
+  const touch=STRINGS.touch||{};
+  const ticker=STRINGS.ticker||{};
+  document.title=STRINGS.pageTitle;
+
+  document.getElementById('card-monogram').textContent=card.monogram||'';
+  const roleEl=document.getElementById('card-role');
+  const domainEl=document.getElementById('card-domain');
+  roleEl.firstChild&&roleEl.firstChild.nodeType===Node.TEXT_NODE&&roleEl.removeChild(roleEl.firstChild);
+  roleEl.insertBefore(document.createTextNode(card.role||''),domainEl);
+  domainEl.textContent=card.domain||'';
+  document.getElementById('card-first-name').textContent=card.firstName||'';
+  document.getElementById('card-last-name').textContent=card.lastName||'';
+  document.getElementById('card-tagline').innerHTML=card.tagline||'';
+  document.getElementById('card-status').textContent=card.status||'';
+
+  const emailLink=document.getElementById('card-link-email');
+  emailLink.href='mailto:'+(card.contactEmail||'');
+  emailLink.textContent=card.contactEmail||'';
+
+  const githubLink=document.getElementById('card-link-github');
+  githubLink.href=card.githubUrl||'#';
+  githubLink.textContent=card.githubLabel||'';
+
+  const linkedinLink=document.getElementById('card-link-linkedin');
+  linkedinLink.href=card.linkedinUrl||'#';
+  linkedinLink.textContent=card.linkedinLabel||'';
+
+  document.getElementById('card-sep-1').textContent=card.separator||'/';
+  document.getElementById('card-sep-2').textContent=card.separator||'/';
+  document.getElementById('gameover-title').textContent=gameOver.title||'Game Over';
+  document.getElementById('restart-btn').textContent=gameOver.restartButton||'Restart [ R ]';
+  document.getElementById('game-hint').textContent=hint.loading||'Loading background game...';
+
+  document.getElementById('tb-left').textContent=touch.left||'<-';
+  document.getElementById('tb-rotate').textContent=touch.rotate||'^';
+  document.getElementById('tb-right').textContent=touch.right||'->';
+  document.getElementById('tb-down').textContent=touch.down||'v';
+  document.getElementById('tb-drop').textContent=touch.drop||'vv';
+
+  document.getElementById('ticker-cat').textContent=ticker.category||'AI & Tech';
+  document.getElementById('ticker-loading').textContent=ticker.loading||'Fetching headlines...';
+  document.getElementById('card-stamp').textContent=STRINGS.stamp||'';
+}
+
+applyStaticStrings();
+
+/* ─── BACKGROUND GAME LOADER ─── */
+(function(){
+  const games=STRINGS.games;
+  const chosen=games[Math.floor(Math.random()*games.length)];
+  document.documentElement.dataset.game=chosen.name;
+  const hint=document.getElementById('game-hint');
+  if(hint) hint.textContent=`${STRINGS.hint.backgroundPrefix} ${chosen.name.toUpperCase()}${STRINGS.hint.separator}${chosen.hint}`;
+  const script=document.createElement('script');
+  script.src=chosen.src;
+  document.body.appendChild(script);
+})();
+
+/* ─── CURSOR ─── */
+const dot=document.getElementById('cur-dot');
+const ring=document.getElementById('cur-ring');
+let mx=0,my=0,rx=0,ry=0;
+document.addEventListener('mousemove',e=>{mx=e.clientX;my=e.clientY});
+document.querySelectorAll('a,button,.tbtn').forEach(el=>{
+  el.addEventListener('mouseenter',()=>document.body.classList.add('hover'));
+  el.addEventListener('mouseleave',()=>document.body.classList.remove('hover'));
+});
+(function curLoop(){
+  rx+=(mx-rx)*.12;ry+=(my-ry)*.12;
+  dot.style.left=mx+'px';dot.style.top=my+'px';
+  ring.style.left=rx+'px';ring.style.top=ry+'px';
+  requestAnimationFrame(curLoop);
+})();
+
+/* ─── NEWS TICKER ─── */
+(function(){
+  const inner = document.getElementById('ticker-inner');
+  const timeEl = document.getElementById('ticker-time');
+  const loading = document.getElementById('ticker-loading');
+
+  const keywords = STRINGS.news.keywords;
+
+  let headlines = [];
+  let x = 0;
+  let speed = 0.7; // px per frame
+  let tickerReady = false;
+  let lastFetch = 0;
+  let isRefreshing = false;
+  const REFRESH_MS = 5 * 60 * 1000; // 5 min
+  const STORY_FETCH_LIMIT = 24;
+  const STORY_FETCH_CONCURRENCY = 4;
+
+  function isRelevant(title){
+    if(!title) return false;
+    const t = title.toLowerCase();
+    return keywords.some(k => t.includes(k));
+  }
+
+  async function fetchStory(id){
+    try{
+      const r = await fetch(`${STRINGS.news.itemUrlPrefix}${id}${STRINGS.news.itemUrlSuffix}`);
+      return await r.json();
+    }catch{ return null; }
+  }
+
+  async function fetchNews(){
+    try{
+      const res = await fetch(STRINGS.news.topStoriesUrl);
+      const ids = await res.json();
+      const top = ids.slice(0, STORY_FETCH_LIMIT);
+      const stories = [];
+      for(let i=0;i<top.length;i+=STORY_FETCH_CONCURRENCY){
+        const batchIds = top.slice(i, i + STORY_FETCH_CONCURRENCY);
+        const batchStories = await Promise.all(batchIds.map(fetchStory));
+        stories.push(...batchStories);
+      }
+      const filtered = stories
+        .filter(s => s && s.title && s.type === 'story' && (isRelevant(s.title) || s.score > 100))
+        .sort((a,b) => b.score - a.score)
+        .slice(0, 25);
+      return filtered;
+    }catch(e){
+      return [];
+    }
+  }
+
+  function buildDOM(stories){
+    const frag = document.createDocumentFragment();
+    stories.forEach((s, i) => {
+      const bullet = document.createElement('span');
+      bullet.className = 'ticker-bullet';
+      frag.appendChild(bullet);
+      const item = document.createElement('span');
+      item.className = 'ticker-item';
+      const a = document.createElement('a');
+      a.href = s.url || `${STRINGS.news.fallbackStoryUrlPrefix}${s.id}`;
+      a.target = '_blank';
+      a.rel = 'noopener';
+      a.textContent = s.title;
+      item.appendChild(a);
+      frag.appendChild(item);
+    });
+    return frag;
+  }
+
+  function renderTicker(stories){
+    if(!stories.length) return;
+    headlines = stories;
+    inner.innerHTML = '';
+    // Build two copies for seamless looping
+    const copy1 = buildDOM(stories);
+    const copy2 = buildDOM(stories);
+    const wrap1 = document.createElement('div');
+    const wrap2 = document.createElement('div');
+    wrap1.style.cssText = wrap2.style.cssText = STRINGS.ticker.wrapStyle;
+    wrap1.appendChild(copy1);
+    wrap2.appendChild(copy2);
+    inner.appendChild(wrap1);
+    inner.appendChild(wrap2);
+    // Reset position after measuring
+    x = 0;
+    inner.style.transform = 'translateX(0)';
+    tickerReady = true;
+  }
+
+  function updateClock(){
+    const now = new Date();
+    timeEl.textContent = now.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  }
+
+  async function refresh(){
+    if(isRefreshing) return;
+    isRefreshing = true;
+    lastFetch = Date.now();
+    try{
+      const stories = await fetchNews();
+      if(stories.length){
+        renderTicker(stories);
+        loading && (loading.style.display='none');
+      }
+    }finally{
+      isRefreshing = false;
+    }
+  }
+
+  // Ticker scroll loop
+  let halfWidth = 0;
+  function tickerLoop(){
+    if(tickerReady){
+      // Measure half width once items are in DOM
+      if(!halfWidth && inner.children[0]){
+        halfWidth = inner.children[0].offsetWidth;
+      }
+      if(halfWidth){
+        x -= speed;
+        if(Math.abs(x) >= halfWidth) x = 0; // seamless reset at exact half
+        inner.style.transform = `translateX(${x}px)`;
+      }
+    }
+    updateClock();
+    // Auto-refresh check
+    if(Date.now() - lastFetch > REFRESH_MS) refresh();
+    requestAnimationFrame(tickerLoop);
+  }
+
+  // Pause on hover
+  inner.addEventListener('mouseenter', ()=>{ speed = 0; });
+  inner.addEventListener('mouseleave', ()=>{ speed = 0.7; });
+
+  refresh();
+  tickerLoop();
+})();
+</script>
+</body>
+</html>
