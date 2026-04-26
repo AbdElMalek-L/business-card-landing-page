@@ -192,7 +192,8 @@ body.hover #cur-ring{width:44px;height:44px;border-color:rgba(212,170,112,.9)}
 @keyframes blink{0%,100%{opacity:.35}50%{opacity:.9}}
 @media(max-width:600px){
   #ticker-bar{height:34px}
-  .ticker-cat{font-size:7px;letter-spacing:.18em}
+  .ticker-label{display:none}
+  .ticker-cat{display:none}
   .ticker-item{font-size:9px}
   .ticker-time{display:none}
 }
