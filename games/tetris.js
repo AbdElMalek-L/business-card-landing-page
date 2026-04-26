@@ -161,12 +161,6 @@ document.addEventListener('keydown',e=>{
   }
 });
 
-/* touch */
-document.getElementById('tb-left').addEventListener('pointerdown',()=>{if(!collides(current.shape,current.x-1,current.y))current.x--;});
-document.getElementById('tb-right').addEventListener('pointerdown',()=>{if(!collides(current.shape,current.x+1,current.y))current.x++;});
-document.getElementById('tb-rotate').addEventListener('pointerdown',()=>tryRotate());
-document.getElementById('tb-down').addEventListener('pointerdown',()=>{if(!collides(current.shape,current.x,current.y+1))current.y++;});
-document.getElementById('tb-drop').addEventListener('pointerdown',()=>hardDrop());
 document.getElementById('restart-btn').addEventListener('click',()=>initBoard());
 
 /* swipe */

@@ -122,23 +122,12 @@ body.hover #cur-ring{width:44px;height:44px;border-color:rgba(212,170,112,.9)}
 @keyframes reveal{to{clip-path:inset(0 0 0% 0)}}
 @keyframes growLine{to{width:100px}}
 
-/* mobile touch controls */
-.touch-btns{
-  display:none;position:fixed;z-index:2;bottom:50px;left:0;right:0;
-  justify-content:center;gap:12px;
-}
 @media(max-width:600px){
-  .touch-btns{display:flex}
   .hint{display:none}
   .card-glass{padding:36px 28px 32px}
   .card-glass::before{left:28px;right:28px}
   .hud{top:12px;right:12px}
   .stamp{display:none}
-}
-.tbtn{
-  width:48px;height:48px;border:1px solid rgba(184,150,95,.3);border-radius:2px;
-  background:rgba(7,6,5,.6);color:rgba(184,150,95,.6);font-size:16px;
-  display:flex;align-items:center;justify-content:center;user-select:none;cursor:none;
 }
 
 /* ── NEWS TICKER ── */
@@ -206,5 +195,16 @@ body.hover #cur-ring{width:44px;height:44px;border-color:rgba(212,170,112,.9)}
   .ticker-cat{font-size:7px;letter-spacing:.18em}
   .ticker-item{font-size:9px}
   .ticker-time{display:none}
-  .touch-btns{bottom:42px}
+}
+
+@media (hover:none) and (pointer:coarse){
+  body,
+  #gameover button{
+    cursor:auto;
+  }
+
+  #cur-dot,
+  #cur-ring{
+    display:none;
+  }
 }

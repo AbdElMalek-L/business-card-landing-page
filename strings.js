@@ -36,13 +36,6 @@ card:{
       backgroundPrefix:'Background game:',
       separator:' - '
     },
-    touch:{
-      left:'<-',
-      rotate:'^',
-      right:'->',
-      down:'v',
-      drop:'vv'
-    },
     ticker:{
       category:'AI & Tech',
       loading:'Fetching headlines...',

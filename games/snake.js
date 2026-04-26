@@ -6,11 +6,6 @@ const gameHint=document.getElementById('game-hint');
 if(gameHint&&GAME_STRINGS) gameHint.textContent=GAME_STRINGS.snake.hint;
 const gameOverPanel=document.getElementById('gameover');
 const restartButton=document.getElementById('restart-btn');
-const touchLeft=document.getElementById('tb-left');
-const touchRight=document.getElementById('tb-right');
-const touchUp=document.getElementById('tb-rotate');
-const touchDown=document.getElementById('tb-down');
-const touchDrop=document.getElementById('tb-drop');
 let W,H,COLS=20,ROWS=20,CELL,OX,OY;
 
 function resize(){
@@ -243,11 +238,6 @@ document.addEventListener('keydown',event=>{
   }
 });
 
-touchLeft.addEventListener('pointerdown',()=>setDirection(DIRECTIONS.left));
-touchRight.addEventListener('pointerdown',()=>setDirection(DIRECTIONS.right));
-touchUp.addEventListener('pointerdown',()=>setDirection(DIRECTIONS.up));
-touchDown.addEventListener('pointerdown',()=>setDirection(DIRECTIONS.down));
-touchDrop.addEventListener('pointerdown',()=>{if(gameOver) restart(); else paused=!paused;});
 restartButton.addEventListener('click',restart);
 
 let sx=0,sy=0;
