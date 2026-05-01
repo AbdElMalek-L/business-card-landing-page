@@ -115,7 +115,20 @@ applyStaticStrings();
 /* ─── BACKGROUND GAME LOADER ─── */
 (function(){
   const games=STRINGS.games;
-  const chosen=games[Math.floor(Math.random()*games.length)];
+  const params=new URLSearchParams(window.location.search);
+  const urlGame=params.get('game');
+  
+  let chosen;
+  if(urlGame){
+    chosen=games.find(g=>g.name===urlGame);
+    if(!chosen){
+      console.warn(`Game "${urlGame}" not found, using random game`);
+      chosen=games[Math.floor(Math.random()*games.length)];
+    }
+  }else{
+    chosen=games[Math.floor(Math.random()*games.length)];
+  }
+  
   document.documentElement.dataset.game=chosen.name;
   const hint=document.getElementById('game-hint');
   if(hint) hint.textContent=`${STRINGS.hint.backgroundPrefix} ${chosen.name.toUpperCase()}${STRINGS.hint.separator}${chosen.hint}`;
